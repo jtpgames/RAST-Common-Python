@@ -53,8 +53,13 @@ class SwitchAggFlowStatsEncoder(JSONEncoder):
 
 
 class SwitchAggFlowStatsDecoder(json.JSONDecoder):
-    def decode(self, s, _w=WHITESPACE.match):
-        dct = super().decode(s)
+    def __init__(self):
+        super().__init__()
+
+        self.object_hook = self.try_create_object
+
+    @staticmethod
+    def try_create_object(dct):
         if 'switch_id' in dct and 'bytes_per_second_received' in dct and 'packets_per_second_received' in dct:
             switch_id = dct['switch_id']
             stats = SwitchAggFlowStats(switch_id)
@@ -62,3 +67,7 @@ class SwitchAggFlowStatsDecoder(json.JSONDecoder):
             stats.packets_per_second_received = {time.fromisoformat(k): v for k, v in dct['packets_per_second_received'].items()}
             return stats
         return dct
+
+    def decode(self, s, _w=WHITESPACE.match):
+        dct = super().decode(s)
+        return self.object_hook(dct)
