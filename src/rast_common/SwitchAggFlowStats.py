@@ -2,7 +2,6 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, time
 from json import JSONEncoder
-from json.decoder import WHITESPACE
 
 
 @dataclass(init=False)
@@ -53,11 +52,6 @@ class SwitchAggFlowStatsEncoder(JSONEncoder):
 
 
 class SwitchAggFlowStatsDecoder(json.JSONDecoder):
-    def __init__(self):
-        super().__init__()
-
-        self.object_hook = self.try_create_object
-
     @staticmethod
     def try_create_object(dct):
         if 'switch_id' in dct and 'bytes_per_second_received' in dct and 'packets_per_second_received' in dct:
@@ -68,6 +62,6 @@ class SwitchAggFlowStatsDecoder(json.JSONDecoder):
             return stats
         return dct
 
-    def decode(self, s, _w=WHITESPACE.match):
+    def decode(self, s, **kwargs):
         dct = super().decode(s)
-        return self.object_hook(dct)
+        return self.try_create_object(dct)
