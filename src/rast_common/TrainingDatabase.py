@@ -23,6 +23,9 @@ class TrainingDataEntity(Base):
     system_cpu_usage: Mapped[float] = mapped_column(Float, nullable=False)
     requests_per_second: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
     requests_per_minute: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+    switch_id: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+    bytes_per_second_transmitted_through_switch: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+    packets_per_second_transmitted_through_switch: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
     request_execution_time_ms: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
 
 
@@ -35,6 +38,9 @@ class TrainingDataRow:
     _system_cpu_usage: float = 0.
     _requests_per_second: int = 0
     _requests_per_minute: int = 0
+    _switch_id: int = 0
+    _bytes_per_second_transmitted_through_switch: int = 0
+    _packets_per_second_transmitted_through_switch: int = 0
     _request_execution_time_ms: int = None
 
     @staticmethod
@@ -59,6 +65,9 @@ class TrainingDataRow:
             self._system_cpu_usage = entity.system_cpu_usage
             self._requests_per_second = entity.requests_per_second
             self._requests_per_minute = entity.requests_per_minute
+            self._switch_id = entity.switch_id
+            self._bytes_per_second_transmitted_through_switch = entity.bytes_per_second_transmitted_through_switch
+            self._packets_per_second_transmitted_through_switch = entity.packets_per_second_transmitted_through_switch
             self._request_execution_time_ms = entity.request_execution_time_ms
 
     def __str__(self):
@@ -71,6 +80,9 @@ class TrainingDataRow:
             system_cpu_usage: {self._system_cpu_usage},
             requests_per_second: {self._requests_per_second},
             requests_per_minute: {self._requests_per_minute},
+            switch_id: {self._switch_id},
+            bytes_per_second_transmitted_through_switch: {self._bytes_per_second_transmitted_through_switch},
+            packets_per_second_transmitted_through_switch: {self._packets_per_second_transmitted_through_switch},
             request_execution_time_ms: {self._request_execution_time_ms}
             """)
 
@@ -107,6 +119,18 @@ class TrainingDataRow:
         return self._requests_per_minute
 
     @property
+    def switch_id(self):
+        return self._switch_id
+
+    @property
+    def bytes_per_second_transmitted_through_switch(self):
+        return self._bytes_per_second_transmitted_through_switch
+
+    @property
+    def packets_per_second_transmitted_through_switch(self):
+        return self._packets_per_second_transmitted_through_switch
+
+    @property
     def request_execution_time_ms(self):
         return self._request_execution_time_ms
 
@@ -141,6 +165,18 @@ class TrainingDataRow:
     @requests_per_minute.setter
     def requests_per_minute(self, value):
         self._requests_per_minute = value
+
+    @switch_id.setter
+    def switch_id(self, value):
+        self._switch_id = value
+
+    @bytes_per_second_transmitted_through_switch.setter
+    def bytes_per_second_transmitted_through_switch(self, value):
+        self._bytes_per_second_transmitted_through_switch = value
+
+    @packets_per_second_transmitted_through_switch.setter
+    def packets_per_second_transmitted_through_switch(self, value):
+        self._packets_per_second_transmitted_through_switch = value
 
     @request_execution_time_ms.setter
     def request_execution_time_ms(self, value):
@@ -189,7 +225,7 @@ def training_data_exists_in_db_using_sqlalchemy(session: Session, path_to_log_fi
     return exists_result
 
 
-def insert_training_data(session: Session, rows: list):
+def insert_training_data(session: Session, rows: list[TrainingDataRow]):
     session.execute(insert(TrainingDataEntity), [
         {
             "timestamp": row.timestamp,
@@ -200,7 +236,10 @@ def insert_training_data(session: Session, rows: list):
             "system_cpu_usage": row.system_cpu_usage,
             "request_execution_time_ms": row.request_execution_time_ms,
             "requests_per_second": row.requests_per_second,
-            "requests_per_minute": row.requests_per_minute
+            "requests_per_minute": row.requests_per_minute,
+            "switch_id": row.switch_id,
+            "bytes_per_second_transmitted_through_switch": row.bytes_per_second_transmitted_through_switch,
+            "packets_per_second_transmitted_through_switch": row.packets_per_second_transmitted_through_switch
         }
         for row in rows
     ])

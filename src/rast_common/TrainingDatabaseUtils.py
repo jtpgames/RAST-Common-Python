@@ -57,6 +57,9 @@ def read_all_performance_metrics_from_db(db_path: str, begin_end: Tuple[str, str
                 float(row.system_cpu_usage),
                 row.requests_per_second,
                 row.requests_per_minute,
+                row.switch_id,
+                row.bytes_per_second_transmitted_through_switch,
+                row.packets_per_second_transmitted_through_switch,
                 float(row.request_execution_time_ms) / 1000,
             )
 
@@ -74,6 +77,9 @@ def read_all_performance_metrics_from_db(db_path: str, begin_end: Tuple[str, str
             'CPU (System)',
             'RPS',
             'RPM',
+            "Switch ID",
+            "BPS transmitted",
+            "PPS transmitted",
             'Response Time s'
         ]
     )
