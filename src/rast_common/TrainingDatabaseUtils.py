@@ -6,10 +6,19 @@ from .TrainingDatabase import read_training_data_from_db_between_using_sqlalchem
     read_all_training_data_from_db_using_sqlalchemy
 
 
-known_request_types = {}
+def read_all_performance_metrics_from_db(db_path: str, begin_end: Tuple[str, str] = ()) -> Tuple[DataFrame, dict]:
+    """
+    Example call:
 
+    `read_all_performance_metrics_from_db(r"db/trainingdata_2021-04-06.db", ("2021 03 30", "2021 04 05"))`
+    :param db_path: Path to SQLite database file
+    :param begin_end: Optional tuple to filter within the specified begin and end datetime.
+    :return: DataFrame with performance metrics
+    and dictionary with the request types mapping created using ordinal encoding
+    """
 
-def read_all_performance_metrics_from_db(db_path: str, begin_end: Tuple[str, str] = ()) -> DataFrame:
+    known_request_types = {}
+
     begin = datetime.now()
 
     if len(begin_end) > 0:
@@ -75,4 +84,4 @@ def read_all_performance_metrics_from_db(db_path: str, begin_end: Tuple[str, str
     # print(df.describe())
     # print("Number of response time outliers: %i" % len(detect_response_time_outliers(df)))
 
-    return df
+    return df, known_request_types
