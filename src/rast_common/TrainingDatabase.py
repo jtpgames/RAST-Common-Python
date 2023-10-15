@@ -1,52 +1,47 @@
 from datetime import datetime
 from typing import Optional, Iterable
-from enum import Enum
 
 from sqlalchemy import create_engine, String, Float, TIMESTAMP, Engine, and_, func, select, insert, between
 from sqlalchemy.dialects.mysql import SMALLINT, INTEGER
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, Session
 
 from .StringUtils import get_date_from_string
-
-
-class TrainingDataEntityVersion(Enum):
-    V1 = 1
-    CURRENT = 2
+from .Version import TrainingDataEntityVersion, SELECTED_VERSION
 
 
 class Base(DeclarativeBase):
     pass
 
 
-class TrainingDataEntityV1(Base):
-    __tablename__ = 'training_data'
-    id: Mapped[int] = mapped_column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
-    timestamp: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False, index=True)
-    number_of_parallel_requests_start: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
-    number_of_parallel_requests_end: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
-    number_of_parallel_requests_finished: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
-    request_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    system_cpu_usage: Mapped[float] = mapped_column(Float, nullable=False)
-    requests_per_second: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
-    requests_per_minute: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
-    request_execution_time_ms: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
-
-
-class TrainingDataEntity(Base):
-    __tablename__ = 'training_data'
-    id: Mapped[int] = mapped_column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
-    timestamp: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False, index=True)
-    number_of_parallel_requests_start: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
-    number_of_parallel_requests_end: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
-    number_of_parallel_requests_finished: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
-    request_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    system_cpu_usage: Mapped[float] = mapped_column(Float, nullable=False)
-    requests_per_second: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
-    requests_per_minute: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
-    switch_id: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
-    bytes_per_second_transmitted_through_switch: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
-    packets_per_second_transmitted_through_switch: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
-    request_execution_time_ms: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+if SELECTED_VERSION == TrainingDataEntityVersion.V1:
+    class TrainingDataEntityV1(Base):
+        __tablename__ = 'training_data'
+        id: Mapped[int] = mapped_column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
+        timestamp: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False, index=True)
+        number_of_parallel_requests_start: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
+        number_of_parallel_requests_end: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
+        number_of_parallel_requests_finished: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
+        request_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
+        system_cpu_usage: Mapped[float] = mapped_column(Float, nullable=False)
+        requests_per_second: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+        requests_per_minute: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+        request_execution_time_ms: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+else:
+    class TrainingDataEntity(Base):
+        __tablename__ = 'training_data'
+        id: Mapped[int] = mapped_column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
+        timestamp: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False, index=True)
+        number_of_parallel_requests_start: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
+        number_of_parallel_requests_end: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
+        number_of_parallel_requests_finished: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
+        request_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
+        system_cpu_usage: Mapped[float] = mapped_column(Float, nullable=False)
+        requests_per_second: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+        requests_per_minute: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+        switch_id: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+        bytes_per_second_transmitted_through_switch: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+        packets_per_second_transmitted_through_switch: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+        request_execution_time_ms: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
 
 
 class TrainingDataRow:
@@ -267,7 +262,7 @@ def insert_training_data(session: Session, rows: list[TrainingDataRow]):
 
 def read_all_training_data_from_db_using_sqlalchemy(
         db_path: str,
-        version: TrainingDataEntityVersion = TrainingDataEntityVersion.CURRENT
+        version: TrainingDataEntityVersion = SELECTED_VERSION
 ) -> Iterable[TrainingDataRow]:
     db_connection = create_connection_using_sqlalchemy(db_path, True)
     if db_connection is None:
@@ -288,7 +283,7 @@ def read_training_data_from_db_between_using_sqlalchemy(
         db_path: str,
         begin: str,
         end: str,
-        version: TrainingDataEntityVersion = TrainingDataEntityVersion.CURRENT
+        version: TrainingDataEntityVersion = SELECTED_VERSION
 ) -> Iterable[TrainingDataRow]:
     db_connection = create_connection_using_sqlalchemy(db_path, True)
     if db_connection is None:
