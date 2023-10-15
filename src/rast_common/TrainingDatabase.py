@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional, Iterable
+from enum import Enum
 
 from sqlalchemy import create_engine, String, Float, TIMESTAMP, Engine, and_, func, select, insert, between
 from sqlalchemy.dialects.mysql import SMALLINT, INTEGER
@@ -8,8 +9,27 @@ from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, Session
 from .StringUtils import get_date_from_string
 
 
+class TrainingDataEntityVersion(Enum):
+    V1 = 1
+    CURRENT = 2
+
+
 class Base(DeclarativeBase):
     pass
+
+
+class TrainingDataEntityV1(Base):
+    __tablename__ = 'training_data'
+    id: Mapped[int] = mapped_column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
+    timestamp: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False, index=True)
+    number_of_parallel_requests_start: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
+    number_of_parallel_requests_end: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
+    number_of_parallel_requests_finished: Mapped[int] = mapped_column(SMALLINT(unsigned=True), nullable=False)
+    request_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    system_cpu_usage: Mapped[float] = mapped_column(Float, nullable=False)
+    requests_per_second: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+    requests_per_minute: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
+    request_execution_time_ms: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False)
 
 
 class TrainingDataEntity(Base):
@@ -55,7 +75,7 @@ class TrainingDataRow:
 
         return row
 
-    def __init__(self, entity: Optional[TrainingDataEntity] = None):
+    def __init__(self, entity: Optional[TrainingDataEntity | TrainingDataEntityV1] = None):
         if entity is not None:
             self._timestamp = entity.timestamp
             self._number_of_parallel_requests_start = entity.number_of_parallel_requests_start
@@ -65,9 +85,9 @@ class TrainingDataRow:
             self._system_cpu_usage = entity.system_cpu_usage
             self._requests_per_second = entity.requests_per_second
             self._requests_per_minute = entity.requests_per_minute
-            self._switch_id = entity.switch_id
-            self._bytes_per_second_transmitted_through_switch = entity.bytes_per_second_transmitted_through_switch
-            self._packets_per_second_transmitted_through_switch = entity.packets_per_second_transmitted_through_switch
+            self._switch_id = entity.switch_id if hasattr(entity, "switch_id") else 0
+            self._bytes_per_second_transmitted_through_switch = entity.bytes_per_second_transmitted_through_switch if hasattr(entity, "bytes_per_second_transmitted_through_switch") else 0
+            self._packets_per_second_transmitted_through_switch = entity.packets_per_second_transmitted_through_switch if hasattr(entity, "packets_per_second_transmitted_through_switch") else 0
             self._request_execution_time_ms = entity.request_execution_time_ms
 
     def __str__(self):
@@ -245,31 +265,49 @@ def insert_training_data(session: Session, rows: list[TrainingDataRow]):
     ])
 
 
-def read_all_training_data_from_db_using_sqlalchemy(db_path: str) -> Iterable[TrainingDataRow]:
+def read_all_training_data_from_db_using_sqlalchemy(
+        db_path: str,
+        version: TrainingDataEntityVersion = TrainingDataEntityVersion.CURRENT
+) -> Iterable[TrainingDataRow]:
     db_connection = create_connection_using_sqlalchemy(db_path, True)
     if db_connection is None:
         print("Could not read performance metrics")
         exit(1)
 
     with Session(db_connection) as session:
-        stmt = select(TrainingDataEntity)
+        if version == TrainingDataEntityVersion.V1:
+            stmt = select(TrainingDataEntityV1)
+        else:
+            stmt = select(TrainingDataEntity)
 
         for row in session.scalars(stmt):
             yield TrainingDataRow(row)
 
 
-def read_training_data_from_db_between_using_sqlalchemy(db_path: str, begin: str, end: str) -> Iterable[TrainingDataRow]:
+def read_training_data_from_db_between_using_sqlalchemy(
+        db_path: str,
+        begin: str,
+        end: str,
+        version: TrainingDataEntityVersion = TrainingDataEntityVersion.CURRENT
+) -> Iterable[TrainingDataRow]:
     db_connection = create_connection_using_sqlalchemy(db_path, True)
     if db_connection is None:
         print("Could not read performance metrics")
         exit(1)
 
     with Session(db_connection) as session:
-        results = session.query(TrainingDataEntity).filter(between(
-            func.strftime('%Y %m %d', TrainingDataEntity.timestamp),
-            begin,
-            end)
-        ).all()
+        if version == TrainingDataEntityVersion.V1:
+            results = session.query(TrainingDataEntityV1).filter(between(
+                func.strftime('%Y %m %d', TrainingDataEntityV1.timestamp),
+                begin,
+                end)
+            ).all()
+        else:
+            results = session.query(TrainingDataEntity).filter(between(
+                func.strftime('%Y %m %d', TrainingDataEntity.timestamp),
+                begin,
+                end)
+            ).all()
 
         for row in results:
             yield row
