@@ -6,14 +6,14 @@ from sqlalchemy.dialects.mysql import SMALLINT, INTEGER
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, Session
 
 from .StringUtils import get_date_from_string
-from .Version import TrainingDataEntityVersion, SELECTED_VERSION
+from ..rast_common_version.Version import TrainingDataEntityVersion, SELECTED_VERSION
 
 
 class Base(DeclarativeBase):
     pass
 
 
-print(f"TrainingDatabaseVersion: {SELECTED_VERSION}")
+print(f"TrainingDataEntityVersion: {SELECTED_VERSION}")
 
 if SELECTED_VERSION == TrainingDataEntityVersion.V1:
     class TrainingDataEntityV1(Base):
