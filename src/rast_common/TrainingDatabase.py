@@ -6,7 +6,7 @@ from sqlalchemy.dialects.mysql import SMALLINT, INTEGER
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, Session
 
 from .StringUtils import get_date_from_string
-from ..rast_common_version.Version import TrainingDataEntityVersion, SELECTED_VERSION
+from src.rast_common_version.Version import TrainingDataEntityVersion, SELECTED_VERSION
 
 
 class Base(DeclarativeBase):
