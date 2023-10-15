@@ -70,7 +70,7 @@ class TrainingDataRow:
 
         return row
 
-    def __init__(self, entity: Optional[TrainingDataEntity | TrainingDataEntityV1] = None):
+    def __init__(self, entity: Optional = None):
         if entity is not None:
             self._timestamp = entity.timestamp
             self._number_of_parallel_requests_start = entity.number_of_parallel_requests_start
