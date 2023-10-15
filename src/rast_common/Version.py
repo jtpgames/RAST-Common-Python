@@ -7,3 +7,8 @@ class TrainingDataEntityVersion(Enum):
 
 
 SELECTED_VERSION = TrainingDataEntityVersion.CURRENT
+
+
+def select_version(version: TrainingDataEntityVersion):
+    global SELECTED_VERSION
+    SELECTED_VERSION = version
