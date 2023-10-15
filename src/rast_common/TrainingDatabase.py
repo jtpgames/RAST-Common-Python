@@ -13,6 +13,8 @@ class Base(DeclarativeBase):
     pass
 
 
+print(f"TrainingDatabaseVersion: {SELECTED_VERSION}")
+
 if SELECTED_VERSION == TrainingDataEntityVersion.V1:
     class TrainingDataEntityV1(Base):
         __tablename__ = 'training_data'
