@@ -1,1 +1,1 @@
-from Version import *
+from .Version import *
