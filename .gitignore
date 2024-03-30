@@ -89,3 +89,7 @@ modules.xml
 .idea/$CACHE_FILE$
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij
+
+/venv
+**/__pycache__
+*.egg-info
