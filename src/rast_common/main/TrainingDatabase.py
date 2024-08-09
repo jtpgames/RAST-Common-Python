@@ -277,7 +277,11 @@ def read_all_training_data_from_db_using_sqlalchemy(
         else:
             stmt = select(TrainingDataEntity)
 
-        for row in session.scalars(stmt):
+        # Stream results using chunked fetching to reduce memory usage
+        chunk_size = 1000  # Adjust chunk size as needed
+
+        # Use yield_per to fetch rows one at a time in a memory-efficient way
+        for row in session.execute(stmt).scalars().yield_per(chunk_size):
             yield TrainingDataRow(row)
 
 
