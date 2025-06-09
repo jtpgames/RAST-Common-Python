@@ -14,7 +14,7 @@ def readResponseTimesFromLogFile(path: str) -> Dict[datetime, float]:
             if 'Response time' not in line:
                 continue
 
-            time_stamp = datetime.strptime(search('\\[.*\\]', line).group(), '[%Y-%m-%d %H:%M:%S,%f]')
+            time_stamp = datetime.strptime(search('\\[[^\\]]*\\]', line).group(), '[%Y-%m-%d %H:%M:%S,%f]')
             response_time = search('(?<=Response time\\s)\\d*', line).group()
 
             while True:
